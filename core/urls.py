@@ -3,6 +3,7 @@ from . import views
 from django.contrib.auth.views import LoginView, LogoutView
 from .views import home, signup
 
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('itinerary/', views.itinerary, name='itinerary'),

@@ -1,76 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sign Up | Travel Buddy</title>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: #f2f2f2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .signup-container {
-            background: #fff;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 300px;
-        }
-        h1 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #ff6347;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        form p {
-            margin-bottom: 10px;
-        }
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px;
-            background: #ff6347;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #e5533d;
-        }
-        .login-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .login-link a {
-            color: #ff6347;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="signup-container">
-        <h1>Sign Up</h1>
+{% extends "base.html" %}
+
+{% block title %}Sign Up | Travel Buddy{% endblock %}
+
+{% block content %}
+    <div class="signup-container" style="margin:0 auto; max-width:300px;">
+        <h1 style="text-align:center; color:#ff6347;">Sign Up</h1>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit">Sign Up</button>
+            <button type="submit" style="width:100%; padding:10px; background:#ff6347; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                Sign Up
+            </button>
         </form>
-        <div class="login-link">
-            <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+        <div class="login-link" style="margin-top:15px; text-align:center;">
+            <p>Already have an account? <a href="{% url 'login' %}" style="color:#ff6347;">Login</a></p>
         </div>
     </div>
-</body>
-</html>
+{% endblock %}
