@@ -72,8 +72,20 @@
         <nav>
             <ul>
                 <li><a href="{% url 'home' %}">Home</a></li>
+                {% if user.is_authenticated %}
+                    <li>Welcome, {{ user.username }}!</li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;">
+                                Logout
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                {% endif %}
                 <li><a href="{% url 'itinerary' %}">Itinerary</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
             </ul>
         </nav>
     </header>
