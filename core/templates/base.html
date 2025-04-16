@@ -75,6 +75,7 @@
             <nav>
                 <ul>
                     <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'rooms_list' %}">Chat Rooms</a></li>
                     <li><a href="{% url 'itinerary' %}">Itinerary</a></li>
                     {% if user.is_authenticated %}
                         <li>Welcome, {{ user.username }}!</li>

@@ -1,0 +1,13 @@
+<!-- chat/templates/chat/create_room.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <h2>Create a Chat Room</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" style="padding:8px; background:#ff6347; color:#fff; border:none; border-radius:4px;">Create Room</button>
+  </form>
+{% endblock %}

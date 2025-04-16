@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Room: {{ room.name }}{% endblock %}
+
+{% block content %}
+  <h2>Chat Room: {{ room.name }}</h2>
+
+  <!-- Chat Message Display Area -->
+  <div id="chat-log" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background: #fff;">
+    <!-- Messages will be appended here -->
+  </div>
+
+  <!-- Input Area for Sending Messages -->
+  <div style="margin-top: 10px;">
+      <input id="chat-message-input" type="text" size="80" placeholder="Type your message here...">
+      <button id="chat-message-submit" style="padding: 8px 12px;">Send</button>
+  </div>
+
+  <script>
+      // Build the WebSocket URL using the room's slug
+      const roomSlug = "{{ room.slug }}";
+      const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+      const chatSocketUrl = wsScheme + "://" + window.location.host + "/ws/chat/" + roomSlug + "/";
+      console.log("Connecting to WebSocket at:", chatSocketUrl);
+
+      // Create a WebSocket connection
+      const chatSocket = new WebSocket(chatSocketUrl);
+
+      chatSocket.onopen = function(e) {
+          console.log("WebSocket connection established.");
+      };
+
+      // When a message is received from the server...
+      chatSocket.onmessage = function(e) {
+          console.log("Received message data:", e.data);
+          try {
+              const data = JSON.parse(e.data);
+              const chatLog = document.getElementById("chat-log");
+              // Create a new paragraph element for the message
+              const messageElement = document.createElement("p");
+              messageElement.textContent = data.message;
+              // Append the new message to the chat-log area
+              chatLog.appendChild(messageElement);
+              // Automatically scroll to the bottom of the chat-log
+              chatLog.scrollTop = chatLog.scrollHeight;
+          } catch(error) {
+              console.error("Error parsing message data:", error);
+          }
+      };
+
+      chatSocket.onclose = function(e) {
+          console.error("WebSocket closed unexpectedly:", e);
+      };
+
+      // When the "Send" button is clicked...
+      document.getElementById("chat-message-submit").onclick = function(e) {
+          e.preventDefault();
+          const messageInput = document.getElementById("chat-message-input");
+          const message = messageInput.value;
+          console.log("Sending message:", message);
+          if (message.trim() !== "") {
+              // Send the message as JSON over the WebSocket
+              chatSocket.send(JSON.stringify({ 'message': message }));
+              // Clear the input after sending
+              messageInput.value = "";
+          }
+      };
+  </script>
+{% endblock %}
