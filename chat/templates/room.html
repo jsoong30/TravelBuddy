@@ -17,53 +17,57 @@
   </div>
 
   <script>
-      // Build the WebSocket URL using the room's slug
-      const roomSlug = "{{ room.slug }}";
-      const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-      const chatSocketUrl = wsScheme + "://" + window.location.host + "/ws/chat/" + roomSlug + "/";
-      console.log("Connecting to WebSocket at:", chatSocketUrl);
+    const roomSlug = "{{ room.slug }}";
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const chatSocketUrl = wsScheme + "://" + window.location.host + "/ws/chat/" + roomSlug + "/";
+    console.log("Connecting to WebSocket at:", chatSocketUrl);
 
-      // Create a WebSocket connection
-      const chatSocket = new WebSocket(chatSocketUrl);
+    const chatSocket = new WebSocket(chatSocketUrl);
 
-      chatSocket.onopen = function(e) {
-          console.log("WebSocket connection established.");
-      };
+    chatSocket.onopen = function(e) {
+        console.log("WebSocket connection established.");
+    };
 
-      // When a message is received from the server...
-      chatSocket.onmessage = function(e) {
-          console.log("Received message data:", e.data);
-          try {
-              const data = JSON.parse(e.data);
-              const chatLog = document.getElementById("chat-log");
-              // Create a new paragraph element for the message
-              const messageElement = document.createElement("p");
-              messageElement.textContent = data.message;
-              // Append the new message to the chat-log area
-              chatLog.appendChild(messageElement);
-              // Automatically scroll to the bottom of the chat-log
-              chatLog.scrollTop = chatLog.scrollHeight;
-          } catch(error) {
-              console.error("Error parsing message data:", error);
-          }
-      };
+    chatSocket.onmessage = function(e) {
+        console.log("Received message data:", e.data);
+        try {
+            const data = JSON.parse(e.data);
+            const username = data.username || 'Anonymous';
+            const messageText = data.message || '';
 
-      chatSocket.onclose = function(e) {
-          console.error("WebSocket closed unexpectedly:", e);
-      };
+            // Format: <username> : message
+            const formattedMsg = username + ' : ' + messageText;
 
-      // When the "Send" button is clicked...
-      document.getElementById("chat-message-submit").onclick = function(e) {
-          e.preventDefault();
-          const messageInput = document.getElementById("chat-message-input");
-          const message = messageInput.value;
-          console.log("Sending message:", message);
-          if (message.trim() !== "") {
-              // Send the message as JSON over the WebSocket
-              chatSocket.send(JSON.stringify({ 'message': message }));
-              // Clear the input after sending
-              messageInput.value = "";
-          }
-      };
+            const chatLog = document.getElementById("chat-log");
+
+            // Create a new paragraph element for each message
+            const messageElement = document.createElement("p");
+            messageElement.textContent = formattedMsg;
+
+            // Append the new message to the chat-log
+            chatLog.appendChild(messageElement);
+
+            // Scroll to the bottom automatically
+            chatLog.scrollTop = chatLog.scrollHeight;
+        } catch(error) {
+            console.error("Error parsing message data:", error);
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error("WebSocket closed unexpectedly:", e);
+    };
+
+    document.getElementById("chat-message-submit").onclick = function(e) {
+        e.preventDefault();
+        const messageInput = document.getElementById("chat-message-input");
+        const message = messageInput.value;
+        console.log("Sending message:", message);
+        if (message.trim() !== "") {
+            chatSocket.send(JSON.stringify({ 'message': message }));
+            messageInput.value = "";
+        }
+    };
   </script>
+
 {% endblock %}
