@@ -1,33 +1,34 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}{{ room.name }}{% endblock %}
+{% block title %}{{ room.name }} | Travel Buddy{% endblock %}
 
 {% block content %}
-    <div class="p-10 lg:p-20 text-center">
-        <h1 class="text-3xl lg:text-6xl text-white">{{ room.name }}</h1>
-    </div>
+  <!-- Room Header -->
+  <div style="width:100%; padding:40px 20px; text-align:center;">
+    <h1 style="font-size:2.5rem; color:black; margin:0;">{{ room.name }}</h1>
+  </div>
 
-    <div class="lg:w-2/4 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
-        <div class="chat-messages space-y-3" id="chat_messages">
-            {% for message in messages %}
-                <div class="p-4 bg-gray-200 rounded-xl">
-                    <p class="font-semibold">{{ message.user.username }}</p>
-                    <p>{{ message.content }}</p>
-                </div>
-            {% endfor %}
-        </div>
+  <!-- Chat Container -->
+  <div style="display:flex; justify-content:center; margin-top:20px;">
+    <div style="width:80%; max-width:800px; height:50vh; background:#fff; border:1px solid #ccc; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px;">
+      <!-- Messages Area -->
+      <div id="chat_messages" style="flex:1; padding:16px; overflow-y:auto; background:#f2f2f2;">
+        {% for message in messages %}
+          <div style="margin-bottom:12px;">
+            <p style="margin:0 0 4px; font-weight:bold; color:#38b2ac;">{{ message.user.username }}</p>
+            <p style="margin:0;">{{ message.content }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <!-- Input Area -->
+      <form method="post" action="." style="display:flex; border-top:1px solid #ccc;">
+        {% csrf_token %}
+        <input type="text" name="content" id="chat-message-input" placeholder="Type a message..." style="flex:1; padding:12px; border:none; outline:none; font-size:1rem; background:#fff;" />
+        <button id="chat-message-submit" type="submit" style="padding:0 20px; border:none; background:orange; color:#fff; cursor:pointer; font-size:1rem;">Send</button>
+      </form>
     </div>
-
-    <div class="lg:w-2/4 mt-6 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
-        <form method="post" action="." class="flex">
-            <input type="text" name="content" class="flex-1 mr-3" placeholder="Your message..." id="chat-message-input">
-            <button
-                class="px-5 py-3 rounded-xl text-white bg-orange-600 hover:bg-orange-700"
-                id="chat-message-submit"
-            >Submit</button>
-        </form>
-    </div>
-
+  </div>
 {% endblock %}
 
 {% block scripts %}
@@ -46,21 +47,21 @@
         )
 
         chatSocket.onmessage = function(e) {
-            console.log('onmessage')
-            const data = JSON.parse(e.data);
-            if (data.message) {
-                let html = '<div class="p-4 bg-gray-200 rounded-xl">';
-                    html += '<p class="font-semibold">' + data.username + '</p>';
-                    html += '<p>' + data.message + '</p></div>';
-
-                document.querySelector('#chat_messages').innerHTML += html;
-            } else {
-                alert('The message was empty')
-            }
-        }
+          const data = JSON.parse(e.data);
+          if (data.message) {
+            const html =
+              '<div style="margin-bottom:12px;">' +
+                '<p style="margin:0 0 4px;font-weight:bold;color:#38b2ac;">' +
+                  data.username +
+                '</p>' +
+                '<p style="margin:0;">' + data.message + '</p>' +
+              '</div>';
+            document.querySelector('#chat_messages').innerHTML += html;
+          }
+        };
         chatSocket.onclose = function(e) {
             console.log('onclose')
-        }
+        };
 
         document.querySelector('#chat-message-submit').onclick = function (e) {
             e.preventDefault();
