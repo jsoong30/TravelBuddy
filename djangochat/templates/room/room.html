@@ -8,6 +8,19 @@
   <div style="width:100%; padding:40px 20px; text-align:center;">
     <h1 style="font-size:2.5rem; color:black; margin:0;">{{ room.name }}</h1>
   </div>
+    {# Only show this to the room owner #}
+  {% if user == room.owner %}
+    <div style="text-align:center; margin-bottom:20px;">
+      <a href="{% url 'manage_requests' slug=room.slug %}"
+         style="padding:8px 16px;
+                background:#3182ce;
+                color:#fff;
+                border-radius:4px;
+                text-decoration:none;">
+        Manage Join Requests
+      </a>
+    </div>
+  {% endif %}
 
   <!-- Chat Container -->
   <div style="display:flex; justify-content:center; margin-top:20px;">

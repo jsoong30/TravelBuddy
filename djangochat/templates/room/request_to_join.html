@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{{ room.name }}</h2>
+  <p>You’re not yet a member.</p>
+  <form method="post" action="{% url 'request_to_join' slug=room.slug %}">
+    {% csrf_token %}
+    <button type="submit">Request to Join</button>
+  </form>
+{% endblock %}
