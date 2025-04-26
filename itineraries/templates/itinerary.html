@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Itinerary Map Route</title>
+  <!-- Load Google Maps API with the API key from Django settings -->
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+  <style>
+    #map { height: 100vh; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    async function initMap() {
+      // Get itinerary locations from Django context
+      const locations = [
+        {% for location in itinerary.locations.all %}
+        {
+          name: "{{ location.name }}",
+          latitude: {{ location.latitude }},
+          longitude: {{ location.longitude }},
+          address: "{{ location.address }}",
+          notes: "{{ location.notes|default:'' }}",
+          order: {{ location.order }},
+        },
+        {% endfor %}
+      ];
+
+      // Ensure locations are sorted by order
+      locations.sort((a, b) => a.order - b.order);
+
+      if (locations.length < 2) {
+        alert("Need at least two locations to show a route.");
+        return;
+      }
+
+      // Initialize Google Map centered on the first location
+      const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 6,
+        center: { lat: locations[0].latitude, lng: locations[0].longitude }
+      });
+
+      const directionsService = new google.maps.DirectionsService();
+      const directionsRenderer = new google.maps.DirectionsRenderer({ map });
+
+      // Build route: origin -> waypoints -> destination
+      const origin = new google.maps.LatLng(locations[0].latitude, locations[0].longitude);
+      const destination = new google.maps.LatLng(
+        locations[locations.length - 1].latitude,
+        locations[locations.length - 1].longitude
+      );
+
+      const waypoints = locations.slice(1, -1).map(loc => ({
+        location: { lat: loc.latitude, lng: loc.longitude },
+        stopover: true
+      }));
+
+      directionsService.route({
+        origin,
+        destination,
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (result, status) => {
+        if (status === 'OK') {
+          directionsRenderer.setDirections(result);
+        } else {
+          alert('Directions request failed due to ' + status);
+        }
+      });
+
+      // Add markers with info windows
+      const infowindow = new google.maps.InfoWindow();
+      locations.forEach(loc => {
+        const marker = new google.maps.Marker({
+          position: { lat: loc.latitude, lng: loc.longitude },
+          map,
+          title: loc.name
+        });
+
+        const contentString = `
+          <div style="max-width: 250px;">
+            <h3>${loc.name}</h3>
+            <p><strong>Address:</strong> ${loc.address}</p>
+            ${loc.notes ? `<p><strong>Notes:</strong> ${loc.notes}</p>` : ""}
+          </div>
+        `;
+
+        marker.addListener("click", () => {
+          infowindow.setContent(contentString);
+          infowindow.open(map, marker);
+        });
+      });
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
