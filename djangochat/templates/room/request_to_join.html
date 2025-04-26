@@ -1,9 +1,25 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Request to Join {{ room.name }}{% endblock %}
+
 {% block content %}
-  <h2>{{ room.name }}</h2>
-  <p>You’re not yet a member.</p>
-  <form method="post" action="{% url 'request_to_join' slug=room.slug %}">
-    {% csrf_token %}
-    <button type="submit">Request to Join</button>
-  </form>
+  <div style="width:100%; padding:40px 20px; text-align:center;">
+    <h1 style="font-size:2rem; margin-bottom:20px;">
+      Request to join &ldquo;{{ room.name }}&rdquo;?
+    </h1>
+    <div>
+      <form method="post" action="{% url 'request_to_join' slug=room.slug %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit"
+                style="padding:12px 24px; background:green; color:#fff; border:none; border-radius:6px; margin-right:10px;">
+          Yes
+        </button>
+      </form>
+      <a href="{% url 'rooms_list' %}"
+         style="padding:12px 24px; background:red; color:#fff; border:none; border-radius:6px; text-decoration:none;">
+        No
+      </a>
+    </div>
+  </div>
 {% endblock %}

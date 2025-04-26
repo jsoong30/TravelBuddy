@@ -6,9 +6,22 @@ from django.utils.text import slugify
 # Create your views here.
 @login_required
 def rooms_list(request):
-    rooms = Room.objects.all()
-    return render(request, 'room/rooms.html', {'rooms': rooms})
-
+    all_rooms = Room.objects.all()
+    rooms_data = []
+    for room in all_rooms:
+        is_approved = RoomMembership.objects.filter(
+            room=room,
+            user=request.user,
+            status=RoomMembership.APPROVED
+        ).exists()
+        rooms_data.append({
+            'name':   room.name,
+            'slug':   room.slug,
+            'status': 'approved' if is_approved else 'pending'
+        })
+    return render(request, 'room/rooms.html', {
+        'rooms_data': rooms_data
+    })
 @login_required
 def room(request, slug):
     room = get_object_or_404(Room, slug=slug)
@@ -18,6 +31,7 @@ def room(request, slug):
         membership = None
 
     if membership is None:
+        # show the Yes/No form
         return render(request, 'room/request_to_join.html', {'room': room})
 
     if membership.status == RoomMembership.PENDING:
@@ -26,16 +40,14 @@ def room(request, slug):
     if membership.status == RoomMembership.DENIED:
         return render(request, 'room/denied.html', {'room': room})
 
-    # Approved → show chat
+    # APPROVED -> chat
     messages = Message.objects.filter(room=room).order_by('date_added')[:25]
-    return render(request, 'room/room.html', {
-        'room': room, 'messages': messages
-    })
-
+    return render(request, 'room/room.html', {'room': room, 'messages': messages})
 @login_required
 def request_to_join(request, slug):
-    room, _ = Room.objects.get_or_create(slug=slug)
-    RoomMembership.objects.get_or_create(room=room, user=request.user)
+    room = get_object_or_404(Room, slug=slug)
+    if request.method == 'POST':
+        RoomMembership.objects.get_or_create(room=room, user=request.user)
     return redirect('room', slug=slug)
 
 @login_required
