@@ -135,6 +135,46 @@
 </div>
 {% endif %}
 
+<div style="max-width:800px; margin:2rem auto;">
+    <h3>Reviews</h3>
+    {% if reviews %}
+      {% for review in reviews %}
+        <div style="border-bottom:1px solid #ddd; padding:1rem 0;">
+          <strong>{{ review.user.username }}</strong>
+          <span style="color:#ff6347;">{{ review.rating }} / 5</span><br>
+          {{ review.comment|linebreaksbr }}<br>
+          <small style="color:#666;">
+            {{ review.created_at|date:"F j, Y, g:i a" }}
+          </small>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No reviews yet. Be the first to review!</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <div style="margin-top:2rem; padding:1rem; background:#f9f9f9; border-radius:8px;">
+        <h4>Leave a review</h4>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button
+            type="submit"
+            style="padding:8px 16px; background:#ff6347; color:#fff;
+                   border:none; border-radius:4px; cursor:pointer;">
+            Submit Review
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <p>
+        <a href="{% url 'login' %}?next={% url 'view_itinerary' itinerary.id %}">
+          Log in to leave a review
+        </a>
+      </p>
+    {% endif %}
+  </div>
+
 <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
 
 <script>

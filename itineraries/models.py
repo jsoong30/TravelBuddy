@@ -5,6 +5,28 @@ import datetime
 from djangochat.models import Room, RoomMembership
 from django.utils.text import slugify
 
+
+class Review(models.Model):
+    itinerary = models.ForeignKey('Itinerary',
+                                  on_delete=models.CASCADE,
+                                  related_name='reviews')
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, f"{i} / 5") for i in range(1, 6)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('itinerary', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.itinerary.name} review by {self.user.username}"
+
+
+# --------------------------------------------------
+
 class Itinerary(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default = 1)
@@ -44,3 +66,4 @@ class Itinerary(models.Model):
             )
             self.chat_room = room
             super().save(update_fields=['chat_room'])
+
