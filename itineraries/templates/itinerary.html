@@ -18,6 +18,22 @@
     margin-top: 20px;
   }
 
+  .chat-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background-color: #0084ff;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+  }
+
+  .chat-button:hover {
+    background-color: #005bb5;
+  }
+
   p {
     font-size: 1.1rem;
     color: #555;
@@ -65,81 +81,6 @@
     background-color: #fafafa;
   }
 
-  #location-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  #location-list li {
-    margin-bottom: 12px;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-    font-size: 0.95rem;
-  }
-
-  #location-list li strong {
-    font-size: 1.1rem;
-    color: #333;
-  }
-
-  #location-list li em {
-    color: #777;
-  }
-
-  #location-list li span.notes {
-    font-style: italic;
-    color: #888;
-  }
-
-  .top-buttons {
-    margin-top: 20px;
-    text-align: center;
-  }
-
-  .btn-edit,
-  .btn-delete {
-    display: inline-block;
-    padding: 8px 12px;
-    margin-right: 10px;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #fff;
-    cursor: pointer;
-  }
-
-  .btn-edit {
-    background-color: #4CAF50;
-  }
-
-  .btn-delete {
-    background-color: #f44336;
-  }
-
-  .info-window-content {
-    font-size: 0.95rem;
-    max-width: 300px;
-  }
-
-  .info-window-content h4 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #333;
-  }
-
-  .info-window-content p {
-    margin: 5px 0;
-    color: #555;
-  }
-
-  .info-window-content img {
-    width: 100%;
-    max-height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-
   @media (max-width: 768px) {
     .itinerary-container {
       flex-direction: column;
@@ -162,6 +103,11 @@
   }
 </style>
 
+<div style="position: relative;">
+  <a href="{% url 'room' slug=itinerary.chat_room.slug %}" class="chat-button">
+    Chat
+  </a>
+</div>
 
 <h2>{{ itinerary.name }}</h2>
 <p><strong>Start Date:</strong> {{ itinerary.start_date }} | <strong>End Date:</strong> {{ itinerary.end_date }}</p>
@@ -189,103 +135,104 @@
 </div>
 {% endif %}
 
+<div style="max-width:800px; margin:2rem auto;">
+    <h3>Reviews</h3>
+    {% if reviews %}
+      {% for review in reviews %}
+        <div style="border-bottom:1px solid #ddd; padding:1rem 0;">
+          <strong>{{ review.user.username }}</strong>
+          <span style="color:#ff6347;">{{ review.rating }} / 5</span><br>
+          {{ review.comment|linebreaksbr }}<br>
+          <small style="color:#666;">
+            {{ review.created_at|date:"F j, Y, g:i a" }}
+          </small>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No reviews yet. Be the first to review!</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <div style="margin-top:2rem; padding:1rem; background:#f9f9f9; border-radius:8px;">
+        <h4>Leave a review</h4>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button
+            type="submit"
+            style="padding:8px 16px; background:#ff6347; color:#fff;
+                   border:none; border-radius:4px; cursor:pointer;">
+            Submit Review
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <p>
+        <a href="{% url 'login' %}?next={% url 'view_itinerary' itinerary.id %}">
+          Log in to leave a review
+        </a>
+      </p>
+    {% endif %}
+  </div>
+
 <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
 
 <script>
+let locations = JSON.parse('{{ locations|escapejs }}');
+let map;
+let markers = [];
 
-    let locations = JSON.parse('{{ locations|escapejs }}');
-    let map;
-    let markers = [];
+function initMap() {
+    if (!locations || locations.length === 0) {
+        alert('No locations found for this itinerary.');
+        return;
+    }
 
-    function initMap() {
-        if (!locations || locations.length === 0) {
-            alert('No locations found for this itinerary.');
-            return;
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: locations[0].latitude, lng: locations[0].longitude },
+        zoom: 6,
+    });
+
+    const bounds = new google.maps.LatLngBounds();
+    const placesService = new google.maps.places.PlacesService(map);
+    const geocoder = new google.maps.Geocoder();
+
+    locations.forEach((loc, idx) => {
+        if (loc.latitude && loc.longitude) {
+            const position = { lat: loc.latitude, lng: loc.longitude };
+            const marker = new google.maps.Marker({
+                map: map,
+                position: position,
+                label: `${idx + 1}`,
+                title: loc.name,
+            });
+
+            markers.push(marker);
+            bounds.extend(position);
         }
+    });
 
-        // Initialize map centered on the first location
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: locations[0].latitude, lng: locations[0].longitude },
-            zoom: 6,
-        });
+    map.fitBounds(bounds);
+    renderLocationList();
+}
 
-        const bounds = new google.maps.LatLngBounds();
-        const placesService = new google.maps.places.PlacesService(map);
-        const geocoder = new google.maps.Geocoder();
+function renderLocationList() {
+    const list = document.getElementById('location-list');
+    list.innerHTML = '';
 
-        locations.forEach((loc, idx) => {
-            if (loc.latitude && loc.longitude) {
-                const position = { lat: loc.latitude, lng: loc.longitude };
-                const marker = new google.maps.Marker({
-                    map: map,
-                    position: position,
-                    label: `${idx + 1}`,
-                    title: loc.name,
-                });
+    locations.forEach((loc, idx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <strong>${idx + 1}. ${loc.name}</strong><br>
+            ${loc.address}<br>
+            <em>${loc.visit_date}</em><br>
+            Notes: ${loc.notes || 'No notes'}
+        `;
+        list.appendChild(li);
+    });
+}
 
-                // Check if the location has a place_id for additional details via the Places API
-                if (loc.place_id) {
-                    const request = { placeId: loc.place_id };
-                    placesService.getDetails(request, (place, status) => {
-                        if (status === google.maps.places.PlacesServiceStatus.OK) {
-                            const infoWindowContent = `
-                                <div class="info-window-content">
-                                    <h4>${place.name}</h4>
-                                    <p><strong>Address:</strong> ${place.formatted_address}</p>
-                                    <p><strong>Rating:</strong> ${place.rating || 'No ratings available'}</p>
-                                    <p><strong>Phone:</strong> ${place.formatted_phone_number || 'No phone available'}</p>
-                                    <p><strong>Website:</strong> <a href="${place.website}" target="_blank">Visit Website</a></p>
-                                    <p><strong>Notes:</strong> <span class="notes">${loc.notes || 'No notes'}</span></p>
-                                </div>
-                            `;
-                            const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
-                            marker.addListener('click', () => { infoWindow.open(map, marker); });
-                        }
-                    });
-                } else {
-                    // If no place_id, use geocoding to get additional details
-                    geocoder.geocode({ location: position }, (results, status) => {
-                        if (status === google.maps.GeocoderStatus.OK && results[0]) {
-                            const place = results[0];
-                            const infoWindowContent = `
-                                <div class="info-window-content">
-                                    <h4>${loc.name}</h4>
-                                    <p><strong>Address:</strong> ${place.formatted_address}</p>
-                                    <p><strong>Notes:</strong> <span class="notes">${loc.notes || 'No notes'}</span></p>
-                                </div>
-                            `;
-                            const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
-                            marker.addListener('click', () => { infoWindow.open(map, marker); });
-                        }
-                    });
-                }
-
-                markers.push(marker);
-                bounds.extend(position);
-            }
-        });
-
-        map.fitBounds(bounds); // Adjust the map to fit all markers
-        renderLocationList();
-    }
-
-    function renderLocationList() {
-        const list = document.getElementById('location-list');
-        list.innerHTML = '';  // Clear any previous list items
-
-        locations.forEach((loc, idx) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <strong>${idx + 1}. ${loc.name}</strong><br>
-                ${loc.address}<br>
-                <em>${loc.visit_date}</em><br>
-                Notes: ${loc.notes || 'No notes'}
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", initMap);
+document.addEventListener("DOMContentLoaded", initMap);
 </script>
 
 {% endblock %}

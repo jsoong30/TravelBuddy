@@ -4,9 +4,12 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 
+from djangochat.models import Room
 import json
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Itinerary
+
+from .forms import ReviewForm
+from .models import Itinerary, Review
 from .itinerary_creator import ItineraryCreator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 import math
@@ -119,7 +122,9 @@ def create_itinerary(request, itinerary_id=None):
                 end_date=end_date
             )
 
+
         itinerary.save()
+
         return redirect('view_itinerary', itinerary_id=itinerary.id)
 
     context = {
@@ -127,3 +132,33 @@ def create_itinerary(request, itinerary_id=None):
         'GOOGLE_MAPS_API_KEY': settings.GOOGLE_MAPS_API_KEY
     }
     return render(request, 'create_itinerary.html', context)
+
+def view_itinerary(request, itinerary_id):
+    itinerary = get_object_or_404(Itinerary, id=itinerary_id)
+    is_owner  = request.user.is_authenticated and itinerary.user == request.user
+
+    # Handle review POST
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('login')  # or raise
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user      = request.user
+            review.itinerary = itinerary
+            review.save()
+            return redirect('view_itinerary', itinerary_id=itinerary.id)
+    else:
+        form = ReviewForm()
+
+    # Fetch all reviews for display
+    reviews = itinerary.reviews.all()  # thanks to related_name
+
+    return render(request, 'itinerary.html', {
+        'itinerary': itinerary,
+        'is_owner': is_owner,
+        'locations': json.dumps(itinerary.locations),
+        'GOOGLE_MAPS_API_KEY': settings.GOOGLE_MAPS_API_KEY,
+        'form': form,
+        'reviews': reviews,
+    })

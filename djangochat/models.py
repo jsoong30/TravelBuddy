@@ -16,7 +16,6 @@ class Room(models.Model):
         through='RoomMembership',
         related_name='chat_rooms'
     )
-
     def __str__(self):
         return self.name
 
