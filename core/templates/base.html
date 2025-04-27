@@ -9,26 +9,83 @@
             margin: 0;
             padding: 0;
         }
+        /* Who We Are Section */
+        #who-we-are {
+            padding: 40px 20px;
+            background-color: #f9f9f9;
+            margin-top: 40px;
+            border-radius: 10px;
+        }
+
+        #who-we-are h2 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .team-container {
+            display: flex;
+            justify-content: space-around;  /* Space evenly across the container */
+            gap: 30px;
+            flex-wrap: wrap;  /* Ensures that content wraps to the next line on smaller screens */
+            justify-content: center; /* Center the items horizontally */
+        }
+
+        .team-member {
+            text-align: center;
+            max-width: 200px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .team-member:hover {
+            transform: scale(1.05); /* Slight zoom effect on hover */
+        }
+
+        .team-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+
+        .team-member h3 {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .team-member p {
+            font-size: 1em;
+            color: #555;
+        }
         /* Overall Body Styling */
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             background: #f2f2f2;
             color: #333;
+            font-size: 18px
+            padding: 20px
         }
         /* Header Styling */
         header {
             background: #ff6347;  /* Tomato color */
             color: #fff;
-            padding: 20px;
+            padding: 20px 40px;
         }
         .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1200px;
+            margin: 0 auto; /* Center the header contents */
         }
         .header-container h1 {
-            font-size: 2.5em;
+            font-size: 2.8em;
         }
         /* Navigation Styling */
         nav ul {
@@ -54,7 +111,12 @@
         }
         /* Main Content Styling */
         main {
-            padding: 40px 20px;
+            padding: 50px 20px;
+            max-width: 1200px;
+            margin: 0 auto; /* Center the main content */
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         /* Footer Styling */
         footer {
@@ -77,6 +139,7 @@
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'itinerary-list' %}">Itinerary</a></li> <!-- Updated to reflect proper itinerary list URL -->
                     <li><a href="{% url 'rooms_list' %}">Chat Rooms</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
                     {% if user.is_authenticated %}
                         <li>Welcome, {{ user.username }}!</li>
                         <li>

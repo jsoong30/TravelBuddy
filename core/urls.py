@@ -30,9 +30,11 @@ urlpatterns = [
       name='password_reset_complete'
     ),
     path('itinerary/', include('itineraries.urls'), name='itinerary'),
+    path('about/', views.about, name='about'),
     path(
           'accounts/activate/<uidb64>/<token>/',
           views.activate,
           name='activate'
         ),
 ]
+

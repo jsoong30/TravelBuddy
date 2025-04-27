@@ -51,6 +51,10 @@ def signup(request):
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
+def about(request):
+    context = {'page_title': 'About Travel Buddy'}
+    return render(request, 'about.html', context)
+
 def activate(request, uidb64, token):
     try:
         uid  = force_str(urlsafe_base64_decode(uidb64))
@@ -65,3 +69,4 @@ def activate(request, uidb64, token):
         return redirect('login')
     else:
         return render(request, 'registration/activation_invalid.html')
+
