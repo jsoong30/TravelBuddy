@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'djangochat',
     'core',
     'itineraries',
-    'rest_framework'
+    'rest_framework',
     'channels',
 ]
 
@@ -141,4 +141,11 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login'
 
+#SMTP Configuration
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'travelbuddy811@gmail.com'
+EMAIL_HOST_PASSWORD = 'xihl opnb stzz cbjk'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
