@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'djangochat',
     'core',
     'itineraries',
-    'rest_framework'
+    'rest_framework',
     'channels',
 ]
 
