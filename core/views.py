@@ -17,3 +17,6 @@ def signup(request):
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
+def about(request):
+    context = {'page_title': 'About Travel Buddy'}
+    return render(request, 'about.html', context)

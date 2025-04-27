@@ -3,8 +3,25 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-    <section>
-        <h2>Plan Your Next Adventure</h2>
-        <p>Discover attractions, get real-time navigation, and plan your trip efficiently.</p>
+    <section class="hero">
+        <h1>Travel Buddy: Your AI Trip Planner</h1>
+        <p>Plan trips, discover attractions, and navigate your next adventure — all in one place.</p>
+        <a href="{% url 'signup' %}" class="btn-primary">Get Started</a>
+    </section>
+
+    <section class="features">
+        <h2>What You Can Do</h2>
+        <ul>
+            <li>🗺️ View popular attractions on interactive maps</li>
+            <li>📅 Filter trips by date and location</li>
+            <li>📝 Post and join group itineraries</li>
+            <li>💬 Chat with fellow travelers</li>
+            <li>🛡️ Safe account creation and review posting</li>
+        </ul>
+    </section>
+
+    <section class="cta">
+        <h2>Ready to plan your next adventure?</h2>
+        <a href="{% url 'signup' %}" class="btn-secondary">Join Travel Buddy</a>
     </section>
 {% endblock %}
