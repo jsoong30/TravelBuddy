@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ room.name }} | Travel Buddy{% endblock %}
+
+{% block content %}
+  <!-- Room Header -->
+  <div style="width:100%; padding:40px 20px; text-align:center;">
+    <h1 style="font-size:2.5rem; color:black; margin:0;">{{ room.name }}</h1>
+  </div>
+    {# Only show this to the room owner #}
+  {% if user == room.owner %}
+    <div style="text-align:center; margin-bottom:20px;">
+      <a href="{% url 'manage_requests' slug=room.slug %}"
+         style="padding:8px 16px;
+                background:#3182ce;
+                color:#fff;
+                border-radius:4px;
+                text-decoration:none;">
+        Manage Join Requests
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Chat Container -->
+  <div style="display:flex; justify-content:center; margin-top:20px;">
+    <div style="width:80%; max-width:800px; height:50vh; background:#fff; border:1px solid #ccc; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px;">
+      <!-- Messages Area -->
+      <div id="chat_messages" style="flex:1; padding:16px; overflow-y:auto; background:#f2f2f2;">
+        {% for message in messages %}
+          <div style="margin-bottom:12px;">
+            <p style="margin:0 0 4px; font-weight:bold; color:#38b2ac;">{{ message.user.username }}</p>
+            <p style="margin:0;">{{ message.content }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <!-- Input Area -->
+      <form method="post" action="." style="display:flex; border-top:1px solid #ccc;">
+        {% csrf_token %}
+        <input type="text" name="content" id="chat-message-input" placeholder="Type a message..." style="flex:1; padding:12px; border:none; outline:none; font-size:1rem; background:#fff;" />
+        <button id="chat-message-submit" type="submit" style="padding:0 20px; border:none; background:orange; color:#fff; cursor:pointer; font-size:1rem;">Send</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+
+    {{ room.slug|json_script:"json-roomname" }}
+    {{ request.user.username|json_script:"json-username" }}
+    <script>
+        const roomName = JSON.parse(document.getElementById('json-roomname').textContent);
+        const username = JSON.parse(document.getElementById('json-username').textContent);
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/'
+            + roomName
+            + '/'
+        )
+
+        chatSocket.onmessage = function(e) {
+          const data = JSON.parse(e.data);
+          if (data.message) {
+            const html =
+              '<div style="margin-bottom:12px;">' +
+                '<p style="margin:0 0 4px;font-weight:bold;color:#38b2ac;">' +
+                  data.username +
+                '</p>' +
+                '<p style="margin:0;">' + data.message + '</p>' +
+              '</div>';
+            document.querySelector('#chat_messages').innerHTML += html;
+          }
+        };
+        chatSocket.onclose = function(e) {
+            console.log('onclose')
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function (e) {
+            e.preventDefault();
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'username': username,
+                'room':roomName
+            }));
+            messageInputDom.value = '';
+            return false;
+        }
+    </script>
+{% endblock %}

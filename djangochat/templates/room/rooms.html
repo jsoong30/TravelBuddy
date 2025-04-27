@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Chat Rooms | Travel Buddy{% endblock %}
+
+{% block content %}
+  <!-- Page Header -->
+  <div style="width:100%; padding:40px 20px; text-align:center;">
+    <h1 style="font-size:2.5rem; color:black; margin:0;">Chat Rooms</h1>
+  </div>
+
+  <!-- Create Room Button -->
+  <div style="text-align:center; margin:20px 0;">
+    <a href="{% url 'create_room' %}"
+       style="padding:12px 24px; background:green; color:#fff; border:none; border-radius:6px; text-decoration:none; font-weight:bold;">
+      ＋ Create New Room
+    </a>
+  </div>
+
+  <!-- Approved / Pending Sections -->
+  <section style="padding:16px;">
+    <h2 style="font-size:1.5rem; margin-bottom:8px;">Approved Rooms</h2>
+    <div id="approved-rooms" style="display:flex; flex-wrap:wrap; gap:12px;"></div>
+  </section>
+
+  <section style="padding:16px;">
+    <h2 style="font-size:1.5rem; margin-bottom:8px;">Pending Rooms</h2>
+    <div id="pending-rooms" style="display:flex; flex-wrap:wrap; gap:12px;"></div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  {{ rooms_data|json_script:"room-list" }}
+  <script src="{% static 'djangochat/js/room-visitors.js' %}"></script>
+{% endblock %}

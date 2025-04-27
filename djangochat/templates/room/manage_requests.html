@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Pending Requests for {{ room.name }}</h2>
+  <ul>
+    {% for m in pending %}
+      <li>
+        {{ m.user.username }} ({{ m.requested_at|date:"SHORT_DATETIME_FORMAT" }})
+        <a href="{% url 'change_request_status' slug=room.slug membership_id=m.id new_status=1 %}">
+          Approve
+        </a> |
+        <a href="{% url 'change_request_status' slug=room.slug membership_id=m.id new_status=2 %}">
+          Deny
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

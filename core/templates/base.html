@@ -76,6 +76,7 @@
                 <ul>
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'itinerary-list' %}">Itinerary</a></li> <!-- Updated to reflect proper itinerary list URL -->
+                    <li><a href="{% url 'rooms_list' %}">Chat Rooms</a></li>
                     {% if user.is_authenticated %}
                         <li>Welcome, {{ user.username }}!</li>
                         <li>
@@ -96,9 +97,13 @@
     <main>
         {% block content %}
         {% endblock %}
+        {% block scripts %}
+        {% endblock %}
+
     </main>
     <footer>
         <p>&copy; 2025 Travel Buddy. All rights reserved.</p>
     </footer>
+
 </body>
 </html>
