@@ -7,9 +7,6 @@ def home(request):
     context = {'page_title': 'Welcome to Travel Buddy'}
     return render(request, 'home.html', context)
 
-def itinerary(request):
-    return HttpResponse("Itinerary page coming soon!")
-
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)

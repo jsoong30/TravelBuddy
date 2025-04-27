@@ -1,10 +1,172 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Temporary</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Search Itinerary{% endblock %}
+
+{% block content %}
+
+<style>
+    #search-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    #search-header h1 {
+        margin: 0;
+    }
+
+    #create-button {
+        padding: 10px 15px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 1.2rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #search-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    #search-form label {
+        font-weight: bold;
+    }
+
+    #search-form input[type="text"],
+    #search-form input[type="date"] {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        min-width: 200px;
+    }
+
+    #search-form button {
+        padding: 10px 15px;
+        background-color: #ff6347;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .itinerary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .itinerary-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #fafafa;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .itinerary-title {
+        font-size: 1.2rem;
+        color: #333;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .location-boxes {
+        margin-top: 10px;
+    }
+
+    .location-box {
+        background-color: #e7f3ff;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="search-header">
+    <h1>Search Itinerary</h1>
+    {% if user.is_authenticated %}
+        <a href="{% url 'create_itinerary' %}" id="create-button">
+            + Create
+        </a>
+    {% endif %}
+</div>
+
+<form method="get" id="search-form">
+    <label for="start_date">Start Date:</label>
+    <input type="date" name="start_date" value="{{ start_date }}">
+
+    <label for="end_date">End Date:</label>
+    <input type="date" name="end_date" value="{{ end_date }}">
+
+    <label for="location">Location:</label>
+    <input type="text" id="location" name="location" value="{{ location }}" placeholder="Enter location">
+    <input type="hidden" id="latitude" name="lat">
+    <input type="hidden" id="longitude" name="lon">
+
+    <button type="submit">Search</button>
+</form>
+
+<h2>Itineraries</h2>
+
+<div class="itinerary-cards">
+    {% for itinerary in itineraries %}
+        <div class="itinerary-card">
+            <a href="{% url 'view_itinerary' itinerary.id %}" class="itinerary-title">{{ itinerary.name }}</a>
+            <p><strong>Start Date:</strong> {{ itinerary.start_date }} - <strong>End Date:</strong> {{ itinerary.end_date }}</p>
+            <p><strong>Locations:</strong></p>
+            <div class="location-boxes">
+                {% for location in itinerary.locations %}
+                    <div class="location-box">
+                        <strong>{{ location.name }}</strong><br>
+                        {{ location.address }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% empty %}
+        <p>No itineraries found matching your criteria.</p>
+    {% endfor %}
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+
+<script>
+    function initAutocomplete() {
+        const input = document.getElementById('location');
+        const autocomplete = new google.maps.places.Autocomplete(input);
+
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (place.geometry) {
+                document.getElementById('latitude').value = place.geometry.location.lat();
+                document.getElementById('longitude').value = place.geometry.location.lng();
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initAutocomplete();
+
+        const form = document.getElementById('search-form');
+        form.addEventListener('submit', function(e) {
+            const latInput = document.getElementById('latitude');
+            const lonInput = document.getElementById('longitude');
+            if (!latInput.value || !lonInput.value) {
+                latInput.remove();
+                lonInput.remove();
+            }
+        });
+    });
+</script>
+
+{% endblock %}

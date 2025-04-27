@@ -1,100 +1,291 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Itinerary Map Route</title>
-  <!-- Load Google Maps API with the API key from Django settings -->
-  <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
-  <style>
-    #map { height: 100vh; width: 100%; }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
+{% extends "base.html" %}
 
-  <script>
-    async function initMap() {
-      // Get itinerary locations from Django context
-      const locations = [
-        {% for location in itinerary.locations.all %}
-        {
-          name: "{{ location.name }}",
-          latitude: {{ location.latitude }},
-          longitude: {{ location.longitude }},
-          address: "{{ location.address }}",
-          notes: "{{ location.notes|default:'' }}",
-          order: {{ location.order }},
-        },
-        {% endfor %}
-      ];
+{% block title %}View Itinerary{% endblock %}
 
-      // Ensure locations are sorted by order
-      locations.sort((a, b) => a.order - b.order);
+{% block content %}
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
 
-      if (locations.length < 2) {
-        alert("Need at least two locations to show a route.");
-        return;
-      }
+  h2 {
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+    margin-top: 20px;
+  }
 
-      // Initialize Google Map centered on the first location
-      const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 6,
-        center: { lat: locations[0].latitude, lng: locations[0].longitude }
-      });
+  p {
+    font-size: 1.1rem;
+    color: #555;
+    text-align: center;
+  }
 
-      const directionsService = new google.maps.DirectionsService();
-      const directionsRenderer = new google.maps.DirectionsRenderer({ map });
+  .itinerary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 20px;
+    justify-content: center;
+  }
 
-      // Build route: origin -> waypoints -> destination
-      const origin = new google.maps.LatLng(locations[0].latitude, locations[0].longitude);
-      const destination = new google.maps.LatLng(
-        locations[locations.length - 1].latitude,
-        locations[locations.length - 1].longitude
-      );
+  .map-section {
+    flex: 2;
+    min-width: 600px;
+    max-width: 800px;
+  }
 
-      const waypoints = locations.slice(1, -1).map(loc => ({
-        location: { lat: loc.latitude, lng: loc.longitude },
-        stopover: true
-      }));
+  .itinerary-detail-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-width: 320px;
+    max-width: 500px;
+    height: fit-content;
+    position: relative;
+  }
 
-      directionsService.route({
-        origin,
-        destination,
-        waypoints,
-        travelMode: google.maps.TravelMode.DRIVING
-      }, (result, status) => {
-        if (status === 'OK') {
-          directionsRenderer.setDirections(result);
-        } else {
-          alert('Directions request failed due to ' + status);
-        }
-      });
+  #map {
+    width: 100%;
+    height: 400px;
+    border-radius: 8px;
+  }
 
-      // Add markers with info windows
-      const infowindow = new google.maps.InfoWindow();
-      locations.forEach(loc => {
-        const marker = new google.maps.Marker({
-          position: { lat: loc.latitude, lng: loc.longitude },
-          map,
-          title: loc.name
-        });
+  .scroll-box {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 5px;
+    background-color: #fafafa;
+  }
 
-        const contentString = `
-          <div style="max-width: 250px;">
-            <h3>${loc.name}</h3>
-            <p><strong>Address:</strong> ${loc.address}</p>
-            ${loc.notes ? `<p><strong>Notes:</strong> ${loc.notes}</p>` : ""}
-          </div>
-        `;
+  #location-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-        marker.addListener("click", () => {
-          infowindow.setContent(contentString);
-          infowindow.open(map, marker);
-        });
-      });
+  #location-list li {
+    margin-bottom: 12px;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.95rem;
+  }
+
+  #location-list li strong {
+    font-size: 1.1rem;
+    color: #333;
+  }
+
+  #location-list li em {
+    color: #777;
+  }
+
+  #location-list li span.notes {
+    font-style: italic;
+    color: #888;
+  }
+
+  .top-buttons {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    display: inline-block;
+    padding: 8px 12px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .btn-edit {
+    background-color: #4CAF50;
+  }
+
+  .btn-delete {
+    background-color: #f44336;
+  }
+
+  .info-window-content {
+    font-size: 0.95rem;
+    max-width: 300px;
+  }
+
+  .info-window-content h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .info-window-content p {
+    margin: 5px 0;
+    color: #555;
+  }
+
+  .info-window-content img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .itinerary-container {
+      flex-direction: column;
+      align-items: center;
     }
 
-    window.onload = initMap;
-  </script>
-</body>
-</html>
+    .map-section {
+      min-width: 100%;
+      height: 400px;
+    }
+
+    .itinerary-detail-container {
+      max-width: 100%;
+      padding: 15px;
+    }
+
+    .scroll-box {
+      max-height: 250px;
+    }
+  }
+</style>
+
+
+<h2>{{ itinerary.name }}</h2>
+<p><strong>Start Date:</strong> {{ itinerary.start_date }} | <strong>End Date:</strong> {{ itinerary.end_date }}</p>
+
+<div class="itinerary-container">
+  <div class="map-section">
+    <div id="map"></div>
+  </div>
+
+  <div class="itinerary-detail-container">
+    <h3>Locations</h3>
+    <div class="scroll-box">
+      <ul id="location-list"></ul>
+    </div>
+  </div>
+</div>
+
+{% if is_owner %}
+<div class="top-buttons">
+  <a href="{% url 'edit_itinerary' itinerary.id %}" class="btn-edit">Edit</a>
+  <form action="{% url 'delete_itinerary' itinerary.id %}" method="POST" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this itinerary?');">Delete</button>
+  </form>
+</div>
+{% endif %}
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+
+<script>
+
+    let locations = JSON.parse('{{ locations|escapejs }}');
+    let map;
+    let markers = [];
+
+    function initMap() {
+        if (!locations || locations.length === 0) {
+            alert('No locations found for this itinerary.');
+            return;
+        }
+
+        // Initialize map centered on the first location
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: locations[0].latitude, lng: locations[0].longitude },
+            zoom: 6,
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        const placesService = new google.maps.places.PlacesService(map);
+        const geocoder = new google.maps.Geocoder();
+
+        locations.forEach((loc, idx) => {
+            if (loc.latitude && loc.longitude) {
+                const position = { lat: loc.latitude, lng: loc.longitude };
+                const marker = new google.maps.Marker({
+                    map: map,
+                    position: position,
+                    label: `${idx + 1}`,
+                    title: loc.name,
+                });
+
+                // Check if the location has a place_id for additional details via the Places API
+                if (loc.place_id) {
+                    const request = { placeId: loc.place_id };
+                    placesService.getDetails(request, (place, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            const infoWindowContent = `
+                                <div class="info-window-content">
+                                    <h4>${place.name}</h4>
+                                    <p><strong>Address:</strong> ${place.formatted_address}</p>
+                                    <p><strong>Rating:</strong> ${place.rating || 'No ratings available'}</p>
+                                    <p><strong>Phone:</strong> ${place.formatted_phone_number || 'No phone available'}</p>
+                                    <p><strong>Website:</strong> <a href="${place.website}" target="_blank">Visit Website</a></p>
+                                    <p><strong>Notes:</strong> <span class="notes">${loc.notes || 'No notes'}</span></p>
+                                </div>
+                            `;
+                            const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
+                            marker.addListener('click', () => { infoWindow.open(map, marker); });
+                        }
+                    });
+                } else {
+                    // If no place_id, use geocoding to get additional details
+                    geocoder.geocode({ location: position }, (results, status) => {
+                        if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                            const place = results[0];
+                            const infoWindowContent = `
+                                <div class="info-window-content">
+                                    <h4>${loc.name}</h4>
+                                    <p><strong>Address:</strong> ${place.formatted_address}</p>
+                                    <p><strong>Notes:</strong> <span class="notes">${loc.notes || 'No notes'}</span></p>
+                                </div>
+                            `;
+                            const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
+                            marker.addListener('click', () => { infoWindow.open(map, marker); });
+                        }
+                    });
+                }
+
+                markers.push(marker);
+                bounds.extend(position);
+            }
+        });
+
+        map.fitBounds(bounds); // Adjust the map to fit all markers
+        renderLocationList();
+    }
+
+    function renderLocationList() {
+        const list = document.getElementById('location-list');
+        list.innerHTML = '';  // Clear any previous list items
+
+        locations.forEach((loc, idx) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <strong>${idx + 1}. ${loc.name}</strong><br>
+                ${loc.address}<br>
+                <em>${loc.visit_date}</em><br>
+                Notes: ${loc.notes || 'No notes'}
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", initMap);
+</script>
+
+{% endblock %}
