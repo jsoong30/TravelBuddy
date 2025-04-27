@@ -1,0 +1,9 @@
+Hi {{ user.username }},
+
+Thanks for signing up! Please copy & paste this link into your browser to activate your account:
+
+{{ activation_link }}
+
+If you didn’t sign up, just ignore this email.
+
+—The Travel Buddy Team

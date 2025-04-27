@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Activation Failed{% endblock %}
+{% block content %}
+<div style="max-width:400px;margin:2rem auto;text-align:center;">
+  <h2>Invalid link</h2>
+  <p>The activation link is invalid or has expired.</p>
+  <p><a href="{% url 'signup' %}">Sign up again</a></p>
+</div>
+{% endblock %}
