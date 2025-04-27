@@ -14,4 +14,5 @@ class ItineraryCreator:
             end_date=end_date,
             locations=serialized_locations
         )
+
         return itinerary

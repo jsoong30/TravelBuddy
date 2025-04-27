@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 
+from djangochat.models import Room
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Itinerary
@@ -119,7 +120,9 @@ def create_itinerary(request, itinerary_id=None):
                 end_date=end_date
             )
 
+
         itinerary.save()
+
         return redirect('view_itinerary', itinerary_id=itinerary.id)
 
     context = {
