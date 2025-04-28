@@ -3,22 +3,16 @@
 {% block title %}Login | Travel Buddy{% endblock %}
 
 {% block content %}
-    <div class="login-container" style="margin:0 auto; max-width:300px;">
-        <h1 style="text-align:center; color:#ff6347;">Login</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" style="width:100%; padding:10px; background:#ff6347; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-                Login
-            </button>
-            <div style="text-align:center; margin-top:1rem;">
-              <a href="{% url 'password_reset' %}" style="color:#ff6347;">
-                Forgot your password?
-              </a>
-            </div>
-        </form>
-        <div class="signup-link" style="margin-top:15px; text-align:center;">
-            <p>Don't have an account? <a href="{% url 'signup' %}" style="color:#ff6347;">Sign up</a></p>
-        </div>
+<div class="auth-container">
+    <h1>Login</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="auth-button">Login</button>
+    </form>
+    <div class="auth-links">
+        <a href="{% url 'password_reset' %}">Forgot your password?</a>
+        <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
     </div>
+</div>
 {% endblock %}
